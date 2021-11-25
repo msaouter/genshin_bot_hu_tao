@@ -1,29 +1,33 @@
+import os
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
-#create a bot that will execute it's command when we enter ![command_name]
-bot = commands.Bot(command_prefix = "!", description = "Genshin bot")
 
-#verifiy if the bot is ready to be executed
-@bot.event
-async def on_ready():
-    print("Ready")
+class HuTaoBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix='!', intents=discord.Intents.all())
+        self.target_message_id = 0
 
-@bot.command()
-async def coucou(ctx):
-    print("coucou")
-    await ctx.send("Coucou !") #await sert à attendre que le bot se connecte à discord (coroutine)
+    async def on_ready(self):
+        print(f"{self.user.display_name} is ready !")
 
-@bot.command()
-async def serverInfo(ctx):
-    server = ctx.guild # guild = serveur
-    numberOfTxtChannels = len(server.text_channels)
-    numberOfVoiceChannels = len(server.voice_channels)
-    serverDescription = server.description
-    numberOfPerson = server.member_count
-    serverName = server.name
-    message = f"Le serveur **{serverName}** contient *{numberOfPerson}* personnes. \nLa description du serveur : {serverDescription}. \nCe serveur possède *{numberOfTxtChannels}* salons écrits et *{numberOfVoiceChannels}* salons vocaux."
-    await ctx.send(message)
+    @staticmethod
+    async def ping_pong(message):
+        await message.channel.send("pong")
 
-#run the bot
-bot.run("ODk3MTI0Njk1MTg5NjQ3NDEw.YWRGew.LZT2eCCrMzMRA4X5p9LKa1nKCSA")
+    async def initialisation(self, message):
+        await message.channel.send("React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
+        self.target_message_id = discord.TextChannel.last_message_id
+
+    async def on_message(self, message):
+        if message.content.lower() == "ping":
+            await self.ping_pong(message)
+        if message.content.lower() == "init":
+            await self.initialisation(message)
+
+
+bot = HuTaoBot()
+load_dotenv(dotenv_path="config")
+
+bot.run(os.getenv("TOKEN"))
