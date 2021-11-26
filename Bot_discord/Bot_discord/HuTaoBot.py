@@ -24,9 +24,9 @@ class HuTaoBot(discord.Client):
 
     @staticmethod
     async def ping_pong(message):
-        """ When sending ping, the bot answer pong
+        """ When calling her name, the bot answer
         Used for debug or to check if the bot is responding"""
-        await message.channel.send("pong")
+        await message.channel.send("I am here !")
 
     async def initialisation(self, message):
         """ Send init in the chat to let the bot post the reaction role message
@@ -34,16 +34,24 @@ class HuTaoBot(discord.Client):
         message = await message.channel.send(
             "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
         self.target_message_id = message.id
+        # list all the emojis to add them on the reaction messages
+        for e in self.emoji_to_role:
+            await message.add_reaction(e)
+        print("Initialization done !")
 
     async def on_message(self, message):
         """ Function to read messages sent by users, used to see if a command has been invoked """
-        if message.content.lower() == "ping":
+        if message.content.lower() == "hu tao ?":
             await self.ping_pong(message)
         if message.content.lower() == "init":
             await self.initialisation(message)
 
     async def on_raw_reaction_add(self, payload):
         """Gives a role to a member based on reacted emoji"""
+        if payload.user_id == self.user.id:
+            # if this is the bot that is reacting, do not add it a role
+            return
+
         message_id = payload.message_id
         if message_id == self.target_message_id:
             # the id of the message the member reacted to is the same as the message registered
