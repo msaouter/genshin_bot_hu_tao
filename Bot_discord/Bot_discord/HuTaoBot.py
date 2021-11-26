@@ -46,10 +46,12 @@ class HuTaoBot(discord.Client):
         """Gives a role to a member based on reacted emoji"""
         message_id = payload.message_id
         if message_id == self.target_message_id:
+            # the id of the message the member reacted to is the same as the message registered
             member = payload.member
             guild = member.guild
 
             try:
+                # retrieve the role based on the reacted emoji
                 role_id = self.emoji_to_role[payload.emoji]
             except KeyError:
                 # the reacted emoji isn't on the list
@@ -62,10 +64,12 @@ class HuTaoBot(discord.Client):
         """ Remove the role when the member unreact to the corresponding emoji"""
         message_id = payload.message_id
         if message_id == self.target_message_id:
+            # the id of the message the member reacted to is the same as the message registered
             member_id = payload.user_id
             guild = guild = self.get_guild(payload.guild_id)
 
             try:
+                # retrieve the role based on the reacted emoji
                 role_id = self.emoji_to_role[payload.emoji]
             except KeyError:
                 # the reacted emoji isn't on the list
@@ -74,6 +78,7 @@ class HuTaoBot(discord.Client):
             member = guild.get_member(member_id)
 
             if member is None:
+                # member isn't in the server anymore
                 return
 
             await member.remove_roles(role)
