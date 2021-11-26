@@ -122,3 +122,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# config file
+config
+.idea/
+
+Bot_discord/.vs/
