@@ -18,6 +18,7 @@ class HuTaoBot(discord.Client):
             discord.PartialEmoji(name='😊'): 897153295150374992,
             discord.PartialEmoji(name='🥳'): 897153343644893236,
         }
+        self.init_flag = False
 
     async def on_ready(self):
         """ Function called when the bot is ready to answer command, print in console when it's ready to answer"""
@@ -29,15 +30,26 @@ class HuTaoBot(discord.Client):
         Used for debug or to check if the bot is responding"""
         await message.channel.send("I am here !")
 
+    @staticmethod
+    async def easter_egg(message):
+        """ When calling her name, the bot answer
+        Used for debug or to check if the bot is responding"""
+        await message.channel.send("I know da way 😉")
+
     async def initialisation(self, message):
         """ Send init in the chat to let the bot post the reaction role message
         Only needs to be called once """
+        # check if the init have already been done
+        if self.init_flag:
+            await message.channel.send("Initialisation have already been done, check ancient messages !")
+            return
         message = await message.channel.send(
             "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
         self.target_message_id = message.id
         # list all the emojis to add them on the reaction messages
         for e in self.emoji_to_role:
             await message.add_reaction(e)
+        self.init_flag = True
         print("Initialization done !")
 
     async def on_message(self, message):
@@ -46,6 +58,8 @@ class HuTaoBot(discord.Client):
             await self.ping_pong(message)
         if message.content.lower() == "init":
             await self.initialisation(message)
+        if message.content.lower() == "do you know da way ?":
+            await self.easter_egg(message)
 
     async def on_raw_reaction_add(self, payload):
         """Gives a role to a member based on reacted emoji"""
