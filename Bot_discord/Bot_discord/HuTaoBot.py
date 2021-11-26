@@ -13,7 +13,8 @@ class HuTaoBot(discord.Client):
 
         self.target_message_id = 0  # id of the message that can be reacted to add/remove role
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
-            # format of the lines : emoji to be detected by the bot (can be personalized one), id of the role it give
+            # ADD YOUR EMOJIS HERE
+            # format : emoji to be detected by the bot (can be personalized one), id of the role it give
             discord.PartialEmoji(name='😊'): 897153295150374992,
             discord.PartialEmoji(name='🥳'): 897153343644893236,
         }
