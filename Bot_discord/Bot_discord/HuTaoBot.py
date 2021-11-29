@@ -1,6 +1,7 @@
 import os
 import discord
-from discord.ext import commands
+from discord.ext import tasks
+import asyncio
 from dotenv import load_dotenv
 
 
@@ -8,9 +9,11 @@ class HuTaoBot(discord.Client):
     """ This class is the core of the bot, every command of the bot is written in this class
     """
 
-    def __init__(self):
+    def __init__(self, role_channel, reminder_channel):
         super().__init__(intents=discord.Intents.all())
 
+        self.role_channel_id = role_channel
+        self.reminder_channel_id = reminder_channel
         self.target_message_id = 0  # id of the message that can be reacted to add/remove role
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
             # ADD YOUR EMOJIS HERE
@@ -20,9 +23,9 @@ class HuTaoBot(discord.Client):
         }
         self.init_flag = False
 
-    async def on_ready(self):
-        """ Function called when the bot is ready to answer command, print in console when it's ready to answer"""
-        print(f"{self.user.display_name} is ready !")
+
+
+    #### MESSAGES ####
 
     @staticmethod
     async def ping_pong(message):
@@ -60,6 +63,10 @@ class HuTaoBot(discord.Client):
             await self.initialisation(message)
         if message.content.lower() == "do you know da way ?":
             await self.easter_egg(message)
+        if message.content.lower() == "help":
+            await self.help(message)
+
+    #### REACTION ROLE ####
 
     async def on_raw_reaction_add(self, payload):
         """Gives a role to a member based on reacted emoji"""
@@ -106,11 +113,43 @@ class HuTaoBot(discord.Client):
 
             await member.remove_roles(role)
 
+    #### REMINDERS ####
 
-bot = HuTaoBot()
+    @tasks.loop(seconds=5)
+    async def genshin_reminder(self):
+        genshin_embed = discord.Embed(
+            title='Genshin reminder',
+            description="It's time for the hoyolab connection traveler's ! @Genshin",
+            color=discord.Color.dark_blue()
+        )
+        await self.get_channel(channel_remind).send(embed=genshin_embed)
+
+    #### HELP ####
+
+    @staticmethod
+    async def help(message):
+        help_embed = discord.Embed(
+            title='Hu Tao - List of commands',
+            color=discord.Color.dark_red()
+        )
+
+        help_embed.add_field(name='Init', value='Command to call to initialize the bot for reaction role', inline=False)
+        help_embed.add_field(name='Help', value='Shows every command you can use', inline=False)
+        help_embed.add_field(name='Hu Tao ?', value='Reply, used to check if the bot is ready to answer', inline=False)
+        help_embed.add_field(name='Do you know da way ?', value='Small easter egg ;)', inline=False)
+        await message.channel.send(embed=help_embed)
+
+    async def on_ready(self):
+        """ Function called when the bot is ready to answer command, print in console when it's ready to answer"""
+        print(f"{self.user.display_name} is ready !")
+        self.genshin_reminder.start()
+
 
 # the following line is used to retrieve the token needed to run the bot and the channel in which the bot is allowed
 # to speak
 load_dotenv(dotenv_path="config")
+channel_role = int(os.getenv("CHANNEL_ROLE"))
+channel_remind = int(os.getenv("CHANNEL_REMIND"))
+bot = HuTaoBot(channel_role, channel_remind)
 
 bot.run(os.getenv("TOKEN"))
