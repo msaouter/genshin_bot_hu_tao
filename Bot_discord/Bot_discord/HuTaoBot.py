@@ -9,11 +9,14 @@ class HuTaoBot(discord.Client):
     """ This class is the core of the bot, every command of the bot is written in this class
     """
 
-    def __init__(self, role_channel, reminder_channel):
+    def __init__(self, role_channel, reminder_channel, guild, genshin_role, epicgames_role):
         super().__init__(intents=discord.Intents.all())
 
         self.role_channel_id = role_channel
         self.reminder_channel_id = reminder_channel
+        self.guild_id = guild
+        self.genshin_role_id = genshin_role
+        self.epicgames_role_id = epicgames_role
         self.target_message_id = 0  # id of the message that can be reacted to add/remove role
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
             # ADD YOUR EMOJIS HERE
@@ -22,8 +25,6 @@ class HuTaoBot(discord.Client):
             discord.PartialEmoji(name='🥳'): 897153343644893236,
         }
         self.init_flag = False
-
-
 
     #### MESSAGES ####
 
@@ -115,14 +116,27 @@ class HuTaoBot(discord.Client):
 
     #### REMINDERS ####
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(hours=24)
     async def genshin_reminder(self):
         genshin_embed = discord.Embed(
             title='Genshin reminder',
-            description="It's time for the hoyolab connection traveler's ! @Genshin",
+            description="It's time for the hoyolab connection traveler's !",
+            url="http://urlr.me/GDsvz",
             color=discord.Color.dark_blue()
         )
-        await self.get_channel(channel_remind).send(embed=genshin_embed)
+        mention = self.get_guild(self.guild_id).get_role(self.genshin_role_id).mention
+        await self.get_channel(channel_remind).send(f"{mention}", embed=genshin_embed)
+
+    @tasks.loop(hours=168)
+    async def epic_store_reminder(self):
+        epic_embed = discord.Embed(
+            title='Epic games reminder',
+            description="It's time to go get your free games on Epic Game store !",
+            url="https://www.epicgames.com/store/fr/",
+            color=discord.Color.gold()
+        )
+        mention = self.get_guild(self.guild_id).get_role(self.epicgames_role_id).mention
+        await self.get_channel(channel_remind).send(f"{mention}", embed=epic_embed)
 
     #### HELP ####
 
@@ -148,8 +162,14 @@ class HuTaoBot(discord.Client):
 # the following line is used to retrieve the token needed to run the bot and the channel in which the bot is allowed
 # to speak
 load_dotenv(dotenv_path="config")
+
+# asign all config variables to a python variable
 channel_role = int(os.getenv("CHANNEL_ROLE"))
 channel_remind = int(os.getenv("CHANNEL_REMIND"))
-bot = HuTaoBot(channel_role, channel_remind)
+guild = int(os.getenv("GUILD"))
+genshin_role = int(os.getenv("GENSHIN_ROLE"))
+epicgames_role = int(os.getenv("EPIG_GAMES_ROLE"))
+
+bot = HuTaoBot(channel_role, channel_remind, guild, genshin_role, epicgames_role)
 
 bot.run(os.getenv("TOKEN"))
