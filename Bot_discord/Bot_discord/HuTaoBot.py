@@ -15,10 +15,13 @@ A Genshin Impact bot that can :
 import os
 import discord
 from discord.ext import tasks
+from discord.ext import commands
 from dotenv import load_dotenv
+import MyHelp
+import MyCog
 
 
-class HuTaoBot(discord.Client):
+class HuTaoBot(commands.Bot):
     """ This class is the core of the bot, every command of the bot is written in this class
 
     . . .
@@ -47,12 +50,8 @@ class HuTaoBot(discord.Client):
     ------
     ping_pong(message)
         When calling her name, the bot answer. Used for debug or to check if the bot is responding
-    easter_egg(message)
-        When sending a special message, the bot answer with this easter egg
     initialisation(message)
         Send init in the chat to let the bot post the reaction role message. Can only be called one time.
-    on_message(message)
-        Function to read messages sent by users, used to see if a command has been invoked
     on_raw_reaction_add(payload)
         Gives a role to a member based on reacted emoji
     on_raw_reaction_remove(payload)
@@ -62,20 +61,20 @@ class HuTaoBot(discord.Client):
     epic_store_reminder()
         Ping every people with the epic games role to remind them to connect to epic games store to get their free
         game(s)
-    help(message)
-        Post a message with every command available
     on_ready()
         Function called when the bot is ready to answer command, print in console when it's ready to answer and
         start the reminders
     """
 
-    def __init__(self, role_channel, reminder_channel, guild, genshin_role, epicgames_role):
-        super().__init__(intents=discord.Intents.all())
+    def __init__(self, reminder_channel, genshin_role, epicgames_role, answer_channel, guild_id, role_channel):
+        super().__init__(command_prefix="!", intents=discord.Intents.all())
 
-        self.guild_id = guild
         self.reminder_channel_id = reminder_channel
         self.genshin_role_id = genshin_role
         self.epicgames_role_id = epicgames_role
+        self.answer_channel_id = answer_channel
+
+        self.guild_id = guild_id
         self.role_channel_id = role_channel
         self.target_message_id = 0  # id of the message that can be reacted to add/remove role
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
@@ -86,39 +85,33 @@ class HuTaoBot(discord.Client):
         }
         self.init_flag = False
 
+        # command creation
+        self.add_command(self.ping_pong)
+        self.add_command(self.initialisation)
+
     #### MESSAGES ####
 
-    @staticmethod
-    async def ping_pong(message):
+    @commands.command(name="hutao")
+    async def ping_pong(ctx):
         """ When calling her name, the bot answer
         Used for debug or to check if the bot is responding
-
-        :param message: Message that have triggered this command of the bot
-        :type message: discord.Message
          """
-        await message.channel.send("I am here !")
+        await ctx.send("I am here !")
 
-    @staticmethod
-    async def easter_egg(message):
-        """ When sending a special message, the bot answer with this easter egg
+    def _initialisation(self):
+        return
 
-        :param message: Message that have triggered this command of the bot
-        :type message: discord.Message
-        """
-        await message.channel.send("I know da way 😉")
-
-    async def initialisation(self, message):
+    @commands.command(name="init")
+    async def initialisation(self, ctx):
         """ Send init in the chat to let the bot post the reaction role message
         Can only be called one time
-
-        :param message: Message that have triggered this command of the bot
-        :type message: discord.Message
         """
         # check if the init have already been done
         if self.init_flag:
-            await message.channel.send("Initialisation have already been done, check ancient messages !")
+            await self.get_channel(channel_answer).send("Initialisation have already been done, check ancient "
+                                                        "messages !")
             return
-        message = await message.channel.send(
+        message = await self.get_channel(channel_answer).send(
             "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
         self.target_message_id = message.id
         # list all the emojis to add them on the reaction messages
@@ -126,21 +119,6 @@ class HuTaoBot(discord.Client):
             await message.add_reaction(e)
         self.init_flag = True
         print("Initialization done !")
-
-    async def on_message(self, message):
-        """ Function to read messages sent by users, used to see if a command has been invoked
-
-        :param message: The last message sent in the bot channel
-        :type message: discord.Message
-        """
-        if message.content.lower() == "hu tao ?":
-            await self.ping_pong(message)
-        if message.content.lower() == "init":
-            await self.initialisation(message)
-        if message.content.lower() == "do you know da way ?":
-            await self.easter_egg(message)
-        if message.content.lower() == "help":
-            await self.help(message)
 
     #### REACTION ROLE ####
 
@@ -212,6 +190,10 @@ class HuTaoBot(discord.Client):
         mention = self.get_guild(self.guild_id).get_role(self.genshin_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=genshin_embed)
 
+    @genshin_reminder.before_loop
+    async def before_genshin_reminder(self):
+        return
+
     @tasks.loop(hours=168)
     async def epic_store_reminder(self):
         """ Ping every people with the epic games role to remind them to connect to epic games store to get their
@@ -226,25 +208,9 @@ class HuTaoBot(discord.Client):
         mention = self.get_guild(self.guild_id).get_role(self.epicgames_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=epic_embed)
 
-    #### HELP ####
-
-    @staticmethod
-    async def help(message):
-        """ Post a message with every command available
-
-        :param message: Message that have triggered this command of the bot
-        :type message: discord.Message
-        """
-        help_embed = discord.Embed(
-            title='Hu Tao - List of commands',
-            color=discord.Color.dark_red()
-        )
-
-        help_embed.add_field(name='Init', value='Command to call to initialize the bot for reaction role', inline=False)
-        help_embed.add_field(name='Help', value='Shows every command you can use', inline=False)
-        help_embed.add_field(name='Hu Tao ?', value='Reply, used to check if the bot is ready to answer', inline=False)
-        help_embed.add_field(name='Do you know da way ?', value='Small easter egg 😉', inline=False)
-        await message.channel.send(embed=help_embed)
+    @epic_store_reminder.before_loop
+    async def before_epic_reminder(self):
+        return
 
     #### ON READY ####
     async def on_ready(self):
@@ -255,6 +221,18 @@ class HuTaoBot(discord.Client):
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
 
+    #### BIRTHDAYS ####
+    """ 
+    - Store every birthday in a file
+    - let people add their birthday to the file via discord command
+    - let people remove their birthday from the file via discord command
+    - bot send a message at 9am telling today's birthdays 
+    """
+
+
+def setup(bot):
+    bot.add_cog(MyCog(bot))
+
 
 # the following line is used to retrieve the token needed to run the bot and the channel in which the bot is allowed
 # to speak
@@ -263,10 +241,13 @@ load_dotenv(dotenv_path="config")
 # assign all config variables to a python variable
 channel_role = int(os.getenv("CHANNEL_ROLE"))
 channel_remind = int(os.getenv("CHANNEL_REMIND"))
+channel_answer = int(os.getenv("CHANNEL_ANSWER"))
 guild = int(os.getenv("GUILD"))
 genshin_role = int(os.getenv("GENSHIN_ROLE"))
 epicgames_role = int(os.getenv("EPIC_GAMES_ROLE"))
 
+HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
+                 answer_channel=channel_answer, guild_id=guild, role_channel=channel_role)
+HuTao.add_cog(MyCog.MyCog(HuTao))
 
-bot = HuTaoBot(channel_role, channel_remind, guild, genshin_role, epicgames_role)
-bot.run(os.getenv("TOKEN"))
+HuTao.run(os.getenv("TOKEN"))
