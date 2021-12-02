@@ -21,7 +21,8 @@ import MyCog
 
 
 class HuTaoBot(commands.Bot):
-    """ This class is the core of the bot, every command of the bot is written in this class
+    """
+    This class is the one that have all the non-callable methods (role attribution, reminders,...)
 
     . . .
 
@@ -47,10 +48,6 @@ class HuTaoBot(commands.Bot):
 
     Methods
     ------
-    ping_pong(message)
-        When calling her name, the bot answer. Used for debug or to check if the bot is responding
-    initialisation(message)
-        Send init in the chat to let the bot post the reaction role message. Can only be called one time.
     on_raw_reaction_add(payload)
         Gives a role to a member based on reacted emoji
     on_raw_reaction_remove(payload)
@@ -188,10 +185,6 @@ class HuTaoBot(commands.Bot):
         print(f"{self.user.display_name} is ready !")
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
-
-
-def setup(bot):
-    bot.add_cog(MyCog(bot))
 
 
 # the following line is used to retrieve the token needed to run the bot and the channel in which the bot is allowed
