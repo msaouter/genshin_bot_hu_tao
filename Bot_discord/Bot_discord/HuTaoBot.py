@@ -17,7 +17,6 @@ import discord
 from discord.ext import tasks
 from discord.ext import commands
 from dotenv import load_dotenv
-import MyHelp
 import MyCog
 
 
@@ -85,43 +84,9 @@ class HuTaoBot(commands.Bot):
         }
         self.init_flag = False
 
-        # command creation
-        self.add_command(self.ping_pong)
-        self.add_command(self.initialisation)
-
-    #### MESSAGES ####
-
-    @commands.command(name="hutao")
-    async def ping_pong(ctx):
-        """ When calling her name, the bot answer
-        Used for debug or to check if the bot is responding
-         """
-        await ctx.send("I am here !")
-
-    def _initialisation(self):
-        return
-
-    @commands.command(name="init")
-    async def initialisation(self, ctx):
-        """ Send init in the chat to let the bot post the reaction role message
-        Can only be called one time
-        """
-        # check if the init have already been done
-        if self.init_flag:
-            await self.get_channel(channel_answer).send("Initialisation have already been done, check ancient "
-                                                        "messages !")
-            return
-        message = await self.get_channel(channel_answer).send(
-            "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
-        self.target_message_id = message.id
-        # list all the emojis to add them on the reaction messages
-        for e in self.emoji_to_role:
-            await message.add_reaction(e)
-        self.init_flag = True
-        print("Initialization done !")
-
     #### REACTION ROLE ####
 
+    @commands.has_permissions(manage_roles=True)
     async def on_raw_reaction_add(self, payload):
         """Gives a role to a member based on reacted emoji
 
@@ -148,6 +113,7 @@ class HuTaoBot(commands.Bot):
             role = guild.get_role(role_id)
             await member.add_roles(role)
 
+    @commands.has_permissions(manage_roles=True)
     async def on_raw_reaction_remove(self, payload):
         """ Remove the role when the member unreact to the corresponding emoji
 
@@ -177,6 +143,7 @@ class HuTaoBot(commands.Bot):
 
     #### REMINDERS ####
 
+    @commands.has_permissions(mention_everyone=True)
     @tasks.loop(hours=24)
     async def genshin_reminder(self):
         """ Ping every people with the genshin role to remind them to connect to hoyolab
@@ -194,6 +161,7 @@ class HuTaoBot(commands.Bot):
     async def before_genshin_reminder(self):
         return
 
+    @commands.has_permissions(mention_everyone=True)
     @tasks.loop(hours=168)
     async def epic_store_reminder(self):
         """ Ping every people with the epic games role to remind them to connect to epic games store to get their
@@ -221,14 +189,6 @@ class HuTaoBot(commands.Bot):
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
 
-    #### BIRTHDAYS ####
-    """ 
-    - Store every birthday in a file
-    - let people add their birthday to the file via discord command
-    - let people remove their birthday from the file via discord command
-    - bot send a message at 9am telling today's birthdays 
-    """
-
 
 def setup(bot):
     bot.add_cog(MyCog(bot))
@@ -251,3 +211,11 @@ HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epi
 HuTao.add_cog(MyCog.MyCog(HuTao))
 
 HuTao.run(os.getenv("TOKEN"))
+
+#### BIRTHDAYS ####
+""" 
+- Store every birthday in a file
+- let people add their birthday to the file via discord command
+- let people remove their birthday from the file via discord command
+- bot send a message at 9am telling today's birthdays 
+"""
