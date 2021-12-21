@@ -17,8 +17,8 @@ import discord
 from discord.ext import tasks
 from discord.ext import commands
 from dotenv import load_dotenv
-import time
-import HuTaoCog
+from datetime import datetime
+import RoleAttribute
 
 
 class HuTaoBot(commands.Bot):
@@ -151,21 +151,46 @@ class HuTaoBot(commands.Bot):
         """
         genshin_embed = discord.Embed(
             title='Genshin reminder',
-            description="It's time for the hoyolab connection traveler's !",
+            description="It's time for the hoyolab connection travelers !",
             url="http://urlr.me/GDsvz",
             color=discord.Color.dark_blue()
         )
+        genshin_embed.set_image(
+            url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK6nW9SP61_xGZVgecspo6vND_UDN38ZP69Q&usqp=CAU")
         mention = self.get_guild(self.guild_id).get_role(self.genshin_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=genshin_embed)
+
+    def check_months(self, month, year):
+        if month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10 or month == 12:
+            max_day_value = 31
+        elif month == 4 or month == 6 or month == 9 or month == 11:
+            max_day_value = 30
+        elif year % 4 == 0 and year % 100 != 0 or year % 400 == 0:
+            max_day_value = 29
+        else:
+            max_day_value = 28
 
     @genshin_reminder.before_loop
     async def before_genshin_reminder(self):
         """
-        Start the reminder any day at 6pm
+        Start the reminder any day at 8pm
         """
-        epoch = time.time()
-        local_time = time.localtime(epoch)
-        if local_time.tm_hour != 20:
+        # epoch = time.time()
+        # local_time = time.localtime(epoch)
+        # if local_time.tm_hour != 20:
+        local_time = datetime.now()
+
+        if local_time.hour != 20:
+            target_time = datetime(year=local_time.year, month=local_time.month, day=local_time.day, hour=20, minute=00,
+                                   second=00)
+            calculation_time = target_time - local_time
+            # negative result management, will only have at max a day of difference
+            if calculation_time.days < 0:
+                # start_day = local_time.day + abs(calculation_time.days)
+                return
+
+            # seconds of sleep calculation
+
             await asyncio.sleep(3600)
         else:
             await self.wait_until_ready()
@@ -183,6 +208,8 @@ class HuTaoBot(commands.Bot):
             url="https://www.epicgames.com/store/fr/",
             color=discord.Color.gold()
         )
+        epic_embed.set_image(
+            url="https://cdn2.unrealengine.com/Unreal+Engine%2Feg-logo-filled-1255x1272-0eb9d144a0f981d1cbaaa1eb957de7a3207b31bb.png")
         mention = self.get_guild(self.guild_id).get_role(self.epicgames_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=epic_embed)
 
@@ -191,16 +218,15 @@ class HuTaoBot(commands.Bot):
         """
         Start the reminder on a thursday at 5pm
         """
-        epoch = time.time()
-        local_time = time.localtime(epoch)
-        if local_time.tm_wday != 3:
-            await asyncio.sleep(86400)
-        else:
-            if local_time.tm_hour != 17:
-                await asyncio.sleep(3600)
-            else:
-                await self.wait_until_ready()
-
+        # epoch = time.time()
+        # local_time = time.localtime(epoch)
+        # if local_time.tm_wday != 3:
+        #     await asyncio.sleep(86400)
+        # else:
+        #     if local_time.tm_hour != 17:
+        #         await asyncio.sleep(3600)
+        #     else:
+        #         await self.wait_until_ready()
 
     #### BIRTHDAYS ####
     """ 
@@ -234,6 +260,6 @@ epicgames_role = int(os.getenv("EPIC_GAMES_ROLE"))
 
 HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
                  answer_channel=channel_answer, guild_id=guild, role_channel=channel_role)
-HuTao.add_cog(HuTaoCog.HuTaoCog(HuTao))
+HuTao.add_cog(RoleAttribute.RoleAttribute(HuTao))
 
 HuTao.run(os.getenv("TOKEN"))

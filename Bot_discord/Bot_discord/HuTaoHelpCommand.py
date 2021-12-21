@@ -43,6 +43,7 @@ class HuTaoHelpCommand(commands.HelpCommand):
         on_help_command_error(ctx, error)
             Triggers when any other error than command not found is happening
         """
+
     def get_command_signature(self, command):
         """ Remove the command prefix when posting the command names """
         return '%s %s' % (command.qualified_name, command.signature)

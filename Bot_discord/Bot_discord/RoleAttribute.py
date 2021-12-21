@@ -2,7 +2,7 @@ from discord.ext import commands
 import HuTaoHelpCommand
 
 
-class HuTaoCog(commands.Cog, name="Hu Tao commands"):
+class RoleAttribute(commands.Cog, name="Hu Tao commands"):
     """
     This class is the class with every callable command registered for this bot (ping, init, ...)
 
