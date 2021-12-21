@@ -1,8 +1,8 @@
 from discord.ext import commands
-import MyHelpCommand
+import HuTaoHelpCommand
 
 
-class MyCog(commands.Cog, name="Hu Tao commands"):
+class HuTaoCog(commands.Cog, name="Hu Tao commands"):
     """
     This class is the class with every callable command registered for this bot (ping, init, ...)
 
@@ -30,7 +30,7 @@ class MyCog(commands.Cog, name="Hu Tao commands"):
     def __init__(self, bot):
         self.bot = bot
 
-        help_command = MyHelpCommand.MyHelpCommand()
+        help_command = HuTaoHelpCommand.HuTaoHelpCommand()
         bot.help_command = help_command
 
     def checking_answer(ctx):

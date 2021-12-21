@@ -16,7 +16,7 @@ class HelpEmbed(discord.Embed):  # Our embed with some preset attributes to avoi
         self.color = discord.Color.dark_red()
 
 
-class MyHelpCommand(commands.HelpCommand):
+class HuTaoHelpCommand(commands.HelpCommand):
     """
         This class is an override of the commands.HelpCommand to have personalized help commands.
 

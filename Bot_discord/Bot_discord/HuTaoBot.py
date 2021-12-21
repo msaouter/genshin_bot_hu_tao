@@ -11,13 +11,14 @@ A Genshin Impact bot that can :
 :copyright: (c) 2021-present Marion SAOUTER
 :license: MIT, see LICENSE for more details.
 """
-
+import asyncio
 import os
 import discord
 from discord.ext import tasks
 from discord.ext import commands
 from dotenv import load_dotenv
-import MyCog
+import time
+import HuTaoCog
 
 
 class HuTaoBot(commands.Bot):
@@ -85,7 +86,8 @@ class HuTaoBot(commands.Bot):
 
     @commands.has_permissions(manage_roles=True)
     async def on_raw_reaction_add(self, payload):
-        """Gives a role to a member based on reacted emoji
+        """
+        Gives a role to a member based on reacted emoji
 
         :param payload: The raw event payload data
         :type payload: RawReactionActionEvent
@@ -112,7 +114,8 @@ class HuTaoBot(commands.Bot):
 
     @commands.has_permissions(manage_roles=True)
     async def on_raw_reaction_remove(self, payload):
-        """ Remove the role when the member unreact to the corresponding emoji
+        """
+        Remove the role when the member unreact to the corresponding emoji
 
         :param payload: The raw event payload data
         :type payload: RawReactionActionEvent
@@ -143,8 +146,9 @@ class HuTaoBot(commands.Bot):
     @commands.has_permissions(mention_everyone=True)
     @tasks.loop(hours=24)
     async def genshin_reminder(self):
-        """ Ping every people with the genshin role to remind them to connect to hoyolab
-         """
+        """
+        Ping every people with the genshin role to remind them to connect to hoyolab
+        """
         genshin_embed = discord.Embed(
             title='Genshin reminder',
             description="It's time for the hoyolab connection traveler's !",
@@ -156,12 +160,21 @@ class HuTaoBot(commands.Bot):
 
     @genshin_reminder.before_loop
     async def before_genshin_reminder(self):
-        return
+        """
+        Start the reminder any day at 6pm
+        """
+        epoch = time.time()
+        local_time = time.localtime(epoch)
+        if local_time.tm_hour != 20:
+            await asyncio.sleep(3600)
+        else:
+            await self.wait_until_ready()
 
     @commands.has_permissions(mention_everyone=True)
     @tasks.loop(hours=168)
     async def epic_store_reminder(self):
-        """ Ping every people with the epic games role to remind them to connect to epic games store to get their
+        """
+        Ping every people with the epic games role to remind them to connect to epic games store to get their
         free game(s)
         """
         epic_embed = discord.Embed(
@@ -175,7 +188,27 @@ class HuTaoBot(commands.Bot):
 
     @epic_store_reminder.before_loop
     async def before_epic_reminder(self):
-        return
+        """
+        Start the reminder on a thursday at 5pm
+        """
+        epoch = time.time()
+        local_time = time.localtime(epoch)
+        if local_time.tm_wday != 3:
+            await asyncio.sleep(86400)
+        else:
+            if local_time.tm_hour != 17:
+                await asyncio.sleep(3600)
+            else:
+                await self.wait_until_ready()
+
+
+    #### BIRTHDAYS ####
+    """ 
+    - Store every birthday in a file
+    - let people add their birthday to the file via discord command
+    - let people remove their birthday from the file via discord command
+    - bot send a message at 9am telling today's birthdays 
+    """
 
     #### ON READY ####
     async def on_ready(self):
@@ -201,14 +234,6 @@ epicgames_role = int(os.getenv("EPIC_GAMES_ROLE"))
 
 HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
                  answer_channel=channel_answer, guild_id=guild, role_channel=channel_role)
-HuTao.add_cog(MyCog.MyCog(HuTao))
+HuTao.add_cog(HuTaoCog.HuTaoCog(HuTao))
 
 HuTao.run(os.getenv("TOKEN"))
-
-#### BIRTHDAYS ####
-""" 
-- Store every birthday in a file
-- let people add their birthday to the file via discord command
-- let people remove their birthday from the file via discord command
-- bot send a message at 9am telling today's birthdays 
-"""
