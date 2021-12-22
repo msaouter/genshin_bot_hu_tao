@@ -160,38 +160,29 @@ class HuTaoBot(commands.Bot):
         mention = self.get_guild(self.guild_id).get_role(self.genshin_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=genshin_embed)
 
-    def check_months(self, month, year):
-        if month == 1 or month == 3 or month == 5 or month == 7 or month == 8 or month == 10 or month == 12:
-            max_day_value = 31
-        elif month == 4 or month == 6 or month == 9 or month == 11:
-            max_day_value = 30
-        elif year % 4 == 0 and year % 100 != 0 or year % 400 == 0:
-            max_day_value = 29
-        else:
-            max_day_value = 28
+    @staticmethod
+    def duration_calculation(local_time, start_date):
+        """
+        Calculate the time duration of the sleep for each reminder
+        :return: duration : the duration time of the wait before the timer start
+        """
+        calculation_time = start_date - local_time
+        day = abs(calculation_time.days)
+        seconds = abs(calculation_time.seconds)  # seconds already have the minutes and hours added
+        duration = (day * 86.400) + seconds
+        return duration
 
     @genshin_reminder.before_loop
     async def before_genshin_reminder(self):
         """
         Start the reminder any day at 8pm
         """
-        # epoch = time.time()
-        # local_time = time.localtime(epoch)
-        # if local_time.tm_hour != 20:
         local_time = datetime.now()
+        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day, hour=20)
 
-        if local_time.hour != 20:
-            target_time = datetime(year=local_time.year, month=local_time.month, day=local_time.day, hour=20, minute=00,
-                                   second=00)
-            calculation_time = target_time - local_time
-            # negative result management, will only have at max a day of difference
-            if calculation_time.days < 0:
-                # start_day = local_time.day + abs(calculation_time.days)
-                return
-
-            # seconds of sleep calculation
-
-            await asyncio.sleep(3600)
+        if local_time != start_date:
+            duration = self.duration_calculation(local_time, start_date)
+            await asyncio.sleep(duration)
         else:
             await self.wait_until_ready()
 
@@ -218,15 +209,28 @@ class HuTaoBot(commands.Bot):
         """
         Start the reminder on a thursday at 5pm
         """
-        # epoch = time.time()
-        # local_time = time.localtime(epoch)
-        # if local_time.tm_wday != 3:
-        #     await asyncio.sleep(86400)
-        # else:
-        #     if local_time.tm_hour != 17:
-        #         await asyncio.sleep(3600)
-        #     else:
-        #         await self.wait_until_ready()
+        local_time = datetime.now()
+        weekday = local_time.weekday()
+        day_to_add = 0
+        if weekday == 0:  # Monday
+            day_to_add = 3
+        elif weekday == 1:  # Tuesday
+            day_to_add = 2
+        elif weekday == 2:  # Wednesday
+            day_to_add = 1
+        elif weekday == 3:  # Thursday TARGET DAY
+            day_to_add = 0
+        elif weekday == 4:  # Friday
+            day_to_add = 6
+        elif weekday == 5:  # Saturday
+            day_to_add = 5
+        elif weekday == 6:  # Sunday
+            day_to_add = 4
+
+        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=17)
+        duration = self.duration_calculation(local_time, start_date)
+        await asyncio.sleep(duration)
+        await self.wait_until_ready()
 
     #### BIRTHDAYS ####
     """ 
