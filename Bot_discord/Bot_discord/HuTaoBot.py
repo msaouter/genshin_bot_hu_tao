@@ -53,23 +53,31 @@ class HuTaoBot(commands.Bot):
         Gives a role to a member based on reacted emoji
     on_raw_reaction_remove(payload)
         Remove the role when the member unreact to the corresponding emoji
+    duration_calculation(local_time, start_date)
+        Calculate the time duration of the sleep for each reminder
     genshin_reminder()
         Ping every people with the genshin role to remind them to connect to hoyolab
+    before_genshin_reminder()
+        Start the reminder any day at 8pm
     epic_store_reminder()
         Ping every people with the epic games role to remind them to connect to epic games store to get their free
         game(s)
+    before_epic_reminder()
+        Start the reminder on a thursday at 5pm
     on_ready()
         Function called when the bot is ready to answer command, print in console when it's ready to answer and
         start the reminders
     """
 
-    def __init__(self, reminder_channel, genshin_role, epicgames_role, answer_channel, guild_id, role_channel):
+    def __init__(self, reminder_channel, genshin_role, epicgames_role, answer_channel, guild_id, role_channel,
+                 birthday_channel):
         super().__init__(command_prefix="!", intents=discord.Intents.all())
 
         self.reminder_channel_id = reminder_channel
         self.genshin_role_id = genshin_role
         self.epicgames_role_id = epicgames_role
         self.answer_channel_id = answer_channel
+        self.birthday_channel_id = birthday_channel
 
         self.guild_id = guild_id
         self.role_channel_id = role_channel
@@ -143,6 +151,18 @@ class HuTaoBot(commands.Bot):
 
     #### REMINDERS ####
 
+    @staticmethod
+    def duration_calculation(local_time, start_date):
+        """
+        Calculate the time duration of the sleep for each reminder
+        :return: duration : the duration time of the wait before the timer start
+        """
+        calculation_time = start_date - local_time
+        day = abs(calculation_time.days)
+        seconds = abs(calculation_time.seconds)  # seconds already have the minutes and hours added
+        duration = (day * 86.400) + seconds
+        return duration
+
     @commands.has_permissions(mention_everyone=True)
     @tasks.loop(hours=24)
     async def genshin_reminder(self):
@@ -159,18 +179,6 @@ class HuTaoBot(commands.Bot):
             url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK6nW9SP61_xGZVgecspo6vND_UDN38ZP69Q&usqp=CAU")
         mention = self.get_guild(self.guild_id).get_role(self.genshin_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=genshin_embed)
-
-    @staticmethod
-    def duration_calculation(local_time, start_date):
-        """
-        Calculate the time duration of the sleep for each reminder
-        :return: duration : the duration time of the wait before the timer start
-        """
-        calculation_time = start_date - local_time
-        day = abs(calculation_time.days)
-        seconds = abs(calculation_time.seconds)  # seconds already have the minutes and hours added
-        duration = (day * 86.400) + seconds
-        return duration
 
     @genshin_reminder.before_loop
     async def before_genshin_reminder(self):
@@ -232,13 +240,6 @@ class HuTaoBot(commands.Bot):
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
-    #### BIRTHDAYS ####
-    """ 
-    - Store every birthday in a file
-    - let people add their birthday to the file via discord command
-    - let people remove their birthday from the file via discord command
-    - bot send a message at 9am telling today's birthdays 
-    """
 
     #### ON READY ####
     async def on_ready(self):
@@ -250,20 +251,21 @@ class HuTaoBot(commands.Bot):
         self.epic_store_reminder.start()
 
 
-# the following line is used to retrieve the token needed to run the bot and the channel in which the bot is allowed
-# to speak
+# the following line is used to retrieve the variable needed to run the bot
 load_dotenv(dotenv_path="config")
 
 # assign all config variables to a python variable
 channel_role = int(os.getenv("CHANNEL_ROLE"))
 channel_remind = int(os.getenv("CHANNEL_REMIND"))
 channel_answer = int(os.getenv("CHANNEL_ANSWER"))
+channel_birthdays = int(os.getenv("CHANNEL_BIRTHDAYS"))
 guild = int(os.getenv("GUILD"))
 genshin_role = int(os.getenv("GENSHIN_ROLE"))
 epicgames_role = int(os.getenv("EPIC_GAMES_ROLE"))
 
 HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
-                 answer_channel=channel_answer, guild_id=guild, role_channel=channel_role)
+                 answer_channel=channel_answer, guild_id=guild, role_channel=channel_role,
+                 birthday_channel=channel_birthdays)
 HuTao.add_cog(RoleAttribute.RoleAttribute(HuTao))
 
 HuTao.run(os.getenv("TOKEN"))

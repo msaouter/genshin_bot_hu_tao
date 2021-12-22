@@ -27,6 +27,7 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
     initialisation_error(self, ctx, error)
         Called if the initialisation have been called in the wrong channel
     """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -60,8 +61,9 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         """
         # check if the init have already been done, if not -> error
         if self.bot.init_flag:
-            await self.bot.get_channel(self.bot.channel_answer).send("Initialisation have already been done, check ancient "
-                                                        "messages !")
+            await self.bot.get_channel(self.bot.channel_answer).send(
+                "Initialisation have already been done, check ancient "
+                "messages !")
             return
         message = await self.bot.get_channel(self.bot.role_channel_id).send(
             "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
@@ -70,7 +72,7 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         for e in self.bot.emoji_to_role:
             await message.add_reaction(e)
         self.bot.init_flag = True
-        print("Initialization done !")
+        print("Initialization done")
 
     @initialisation.error
     async def initialisation_error(self, ctx, error):
