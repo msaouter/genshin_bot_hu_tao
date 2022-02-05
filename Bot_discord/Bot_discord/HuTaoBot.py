@@ -16,7 +16,9 @@ import os
 import discord
 from discord.ext import tasks
 from discord.ext import commands
-from dotenv import load_dotenv
+import os
+if not os.environ.get("PRODUCTION"):
+    from dotenv import load_dotenv
 from datetime import datetime
 import RoleAttribute
 
@@ -252,7 +254,8 @@ class HuTaoBot(commands.Bot):
 
 
 # the following line is used to retrieve the variable needed to run the bot
-load_dotenv(dotenv_path="config")
+if not os.environ.get("PRODUCTION"):
+    load_dotenv(dotenv_path="config")
 
 # assign all config variables to a python variable
 channel_role = int(os.getenv("CHANNEL_ROLE"))
