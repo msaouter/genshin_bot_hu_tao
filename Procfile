@@ -1,1 +1,1 @@
-worker: python Bot_discord\Bot_discord\HuTaoBot.py
+worker: python Bot_discord/Bot_discord/HuTaoBot.py
