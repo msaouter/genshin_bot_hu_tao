@@ -85,8 +85,8 @@ class HuTaoBot(commands.Bot):
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
             # ADD YOUR EMOJIS HERE
             # format : emoji to be detected by the bot (can be personalized one), id of the role it give
-            discord.PartialEmoji(name='😊'): 897153295150374992,
-            discord.PartialEmoji(name='🥳'): 897153343644893236,
+            discord.PartialEmoji(name='😊'): self.genshin_role_id,
+            discord.PartialEmoji(name='🥳'): self.epicgames_role_id,
         }
         self.init_flag = False
 

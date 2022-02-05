@@ -34,16 +34,17 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         help_command = HuTaoHelpCommand.HuTaoHelpCommand()
         bot.help_command = help_command
 
+
     def checking_answer(ctx):
         """ Check if the current channel is the same as the one specified in the config file for answering commands
         """
-        return ctx.message.channel.id == 897121894568972298
+        return ctx.message.channel.id == 897080141778407424
 
     def checking_role(ctx):
         """ Check if the current channel is the same as the one specified in the config file to post the reaction
         role message
         """
-        return ctx.message.channel.id == 897155104426307614
+        return ctx.message.channel.id == 939543859988398201
 
     @commands.command(name="hutao")
     @commands.check(checking_answer)
@@ -61,10 +62,11 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         """
         # check if the init have already been done, if not -> error
         if self.bot.init_flag:
-            await self.bot.get_channel(self.bot.channel_answer).send(
+            await self.bot.get_channel(self.bot.answer_channel_id).send(
                 "Initialisation have already been done, check ancient "
                 "messages !")
             return
+
         message = await self.bot.get_channel(self.bot.role_channel_id).send(
             "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
         self.bot.target_message_id = message.id
