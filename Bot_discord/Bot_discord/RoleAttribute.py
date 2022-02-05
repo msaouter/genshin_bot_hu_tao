@@ -68,7 +68,7 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
             return
 
         message = await self.bot.get_channel(self.bot.role_channel_id).send(
-            "React to this message to get the corresponding roles :\n😊 : bla\n🥳 : blo")
+            "React to this message to get the corresponding roles :\n😊 : Rappel genshin\n🥳 : Rappel Epic Games")
         self.bot.target_message_id = message.id
         # list all the emojis to add them on the reaction messages
         for e in self.bot.emoji_to_role:
