@@ -156,13 +156,13 @@ class HuTaoBot(commands.Bot):
     @staticmethod
     def duration_calculation(local_time, start_date):
         """
-        Calculate the time duration of the sleep for each reminder
+        Calculate the time duration of the sleep for each reminder in seconds
         :return: duration : the duration time of the wait before the timer start
         """
         calculation_time = start_date - local_time
         day = abs(calculation_time.days)
         seconds = abs(calculation_time.seconds)  # seconds already have the minutes and hours added
-        duration = (day * 86.400) + seconds
+        duration = (day * 86400) + seconds
         return duration
 
     @commands.has_permissions(mention_everyone=True)
@@ -192,6 +192,7 @@ class HuTaoBot(commands.Bot):
 
         if local_time != start_date:
             duration = self.duration_calculation(local_time, start_date)
+            print("Genshin impact : ", duration)
             await asyncio.sleep(duration)
         else:
             await self.wait_until_ready()
@@ -239,6 +240,7 @@ class HuTaoBot(commands.Bot):
 
         start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=17)
         duration = self.duration_calculation(local_time, start_date)
+        print("Epic store : ", duration)
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
