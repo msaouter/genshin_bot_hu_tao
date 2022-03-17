@@ -207,7 +207,7 @@ class HuTaoBot(commands.Bot):
         epic_embed = discord.Embed(
             title='Epic games reminder',
             description="It's time to go get your free games on Epic Game store !",
-            url="https://www.epicgames.com/store/fr/",
+            url="https://store.epicgames.com/fr/free-games",
             color=discord.Color.gold()
         )
         epic_embed.set_image(
