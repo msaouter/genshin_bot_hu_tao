@@ -17,6 +17,7 @@ import discord
 from discord.ext import tasks
 from discord.ext import commands
 import os
+
 if not os.environ.get("PRODUCTION"):
     from dotenv import load_dotenv
 from datetime import datetime
@@ -188,7 +189,8 @@ class HuTaoBot(commands.Bot):
         Start the reminder any day at 8pm
         """
         local_time = datetime.now()
-        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day, hour=20)
+        # minus one hour for the time difference with the server
+        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day, hour=19)
 
         if local_time != start_date:
             duration = self.duration_calculation(local_time, start_date)
@@ -238,12 +240,12 @@ class HuTaoBot(commands.Bot):
         elif weekday == 6:  # Sunday
             day_to_add = 4
 
-        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=17)
+        # minus one hour for the time difference with the server
+        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=16)
         duration = self.duration_calculation(local_time, start_date)
         print("Epic store : ", duration)
         await asyncio.sleep(duration)
         await self.wait_until_ready()
-
 
     #### ON READY ####
     async def on_ready(self):

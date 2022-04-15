@@ -51,13 +51,14 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         Mostly used for debug or to check if the bot is responding
          """
         if self.checking_answer(ctx):
-            await ctx.send("I am here !")
+            await ctx.send("Henlo~ ! 👋")
 
     @commands.command(name="init")
     async def initialisation(self, ctx):
         """ Initialise the reaction role message.
         Can only be called one time and if the channel id is equal to CHANNEL_ROLE
         """
+        role_chan = self.bot.get_channel(self.bot.role_channel_id)
         if not self.checking_role(ctx):
             await self.initialisation_error(ctx)
             return
@@ -67,16 +68,23 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
             await ctx.message.delete()
             await self.bot.get_channel(self.bot.answer_channel_id).send(
                 "Initialisation have already been done, check ancient "
-                "messages !", delete_after=5)
+                "messages ! " + ctx.message.author.mention, delete_after=5)
             return
 
+        last_messages = await role_chan.history(limit=2).flatten()
+
+        if last_messages[1].author.id == self.bot.user.id:
+            self.bot.target_message_id = last_messages[1].id
+        else:
+            message = await self.bot.get_channel(self.bot.role_channel_id).send(
+                "React to this message to get the corresponding roles :\n😊 : Rappel genshin\n🥳 : Rappel Epic Games")
+            self.bot.target_message_id = message.id
+            # list all the emojis to add them on the reaction messages
+            for e in self.bot.emoji_to_role:
+                await message.add_reaction(e)
+
         await ctx.message.delete()
-        message = await self.bot.get_channel(self.bot.role_channel_id).send(
-            "React to this message to get the corresponding roles :\n😊 : Rappel genshin\n🥳 : Rappel Epic Games")
-        self.bot.target_message_id = message.id
-        # list all the emojis to add them on the reaction messages
-        for e in self.bot.emoji_to_role:
-            await message.add_reaction(e)
+
         self.bot.init_flag = True
         print("Initialization done")
 
