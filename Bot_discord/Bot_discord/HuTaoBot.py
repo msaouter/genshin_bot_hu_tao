@@ -88,8 +88,9 @@ class HuTaoBot(commands.Bot):
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
             # ADD YOUR EMOJIS HERE
             # format : emoji to be detected by the bot (can be personalized one), id of the role it give
-            discord.PartialEmoji(name='😊'): self.genshin_role_id,
-            discord.PartialEmoji(name='🥳'): self.epicgames_role_id,
+            discord.PartialEmoji(name='🗡️'): self.genshin_role_id,
+            discord.PartialEmoji(name='🎮'): self.epicgames_role_id,
+            discord.PartialEmoji(name='👑'): self.primegaming_role_id,
         }
         self.init_flag = False
 
@@ -194,7 +195,7 @@ class HuTaoBot(commands.Bot):
 
         if local_time != start_date:
             duration = self.duration_calculation(local_time, start_date)
-            print("Genshin impact : ", duration)
+            #print("Genshin impact : ", duration)
             await asyncio.sleep(duration)
         else:
             await self.wait_until_ready()
@@ -243,7 +244,7 @@ class HuTaoBot(commands.Bot):
         # minus one hour for the time difference with the server
         start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=16)
         duration = self.duration_calculation(local_time, start_date)
-        print("Epic store : ", duration)
+        #print("Epic store : ", duration)
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
