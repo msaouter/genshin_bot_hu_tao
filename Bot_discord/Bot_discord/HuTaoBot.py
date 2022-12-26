@@ -23,7 +23,8 @@ from datetime import datetime
 import RoleAttribute
 
 #### GLOBAL ####
-prime_loop_datetime = datetime(year=datetime.now().year, month=datetime.now().month, day=26, hour=20)
+prime_loop_datetime = datetime(year=datetime.now().year, month=datetime.now().month, day=26, hour=18)
+
 
 class HuTaoBot(commands.Bot):
     """
@@ -288,7 +289,8 @@ class HuTaoBot(commands.Bot):
         global prime_loop_datetime
 
         if prime_loop_datetime.year != now.year:
-            prime_loop_datetime = datetime(year=now.year, month=now.month, day=prime_loop_datetime.day, hour=prime_loop_datetime.hour)
+            prime_loop_datetime = datetime(year=now.year, month=now.month, day=prime_loop_datetime.day,
+                                           hour=prime_loop_datetime.hour)
         if now.day != prime_loop_datetime.day:
             return
         await self.prime_reminder()
@@ -301,17 +303,14 @@ class HuTaoBot(commands.Bot):
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
-
     #### ON READY ####
     async def on_ready(self):
         """ Function called when the bot is ready to answer command, print in console when it's ready to answer and
         start the reminders
         """
         print(f"{self.user.display_name} is ready !")
-        # await self.role_assigner_checker()
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
-
         self.check_prime_reminder.start()
 
 
