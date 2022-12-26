@@ -45,6 +45,18 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         """
         return ctx.message.channel.id == self.bot.role_channel_id
 
+    async def check_last_message(self, ctx):
+        channel = self.bot.get_channel(self.bot.role_channel_id)
+
+        messages = [message async for message in channel.history(limit=2)]
+
+        message = messages[1]
+
+        if message.author.id == self.bot.user.id:
+            self.bot.target_message_id = message.id
+        else:
+            self.bot.target_message_id = None
+
     @commands.command(name="hutao")
     async def ping_pong(self, ctx):
         """ When calling her name, the bot answer
@@ -70,18 +82,27 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
                 "messages ! " + ctx.message.author.mention, delete_after=5)
             return
 
-        message = await self.bot.get_channel(self.bot.role_channel_id).send(
-            "React to this message to get the corresponding roles :\n🗡️ Rappel genshin\n"
-            "🎮 Rappel Epic Games\n👑 Rappel Twitch Prime")
-        self.bot.target_message_id = message.id
-        # list all the emojis to add them on the reaction messages
-        for e in self.bot.emoji_to_role:
-            await message.add_reaction(e)
+        # check if the bot have already been run and initialized previously
+        await self.check_last_message(ctx)
 
-        await ctx.message.delete()
+        if self.bot.target_message_id is not None:
+            self.bot.init_flag = True
+            await ctx.message.delete()
+            print("Last role reaction message have been fetched")
+            return
 
-        self.bot.init_flag = True
-        print("Initialization done")
+        else:
+            message = await self.bot.get_channel(self.bot.role_channel_id).send(
+                "React to this message to get the corresponding roles :\n🗡️ Rappel genshin\n"
+                "🎮 Rappel Epic Games\n👑 Rappel Twitch Prime")
+            self.bot.target_message_id = message.id
+            # list all the emojis to add them on the reaction messages
+            for e in self.bot.emoji_to_role:
+                await message.add_reaction(e)
+
+            await ctx.message.delete()
+            self.bot.init_flag = True
+            print("Initialization done")
 
     @staticmethod
     async def initialisation_error(ctx):

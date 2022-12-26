@@ -22,6 +22,8 @@ if not os.environ.get("PRODUCTION"):
 from datetime import datetime
 import RoleAttribute
 
+#### GLOBAL ####
+prime_loop_datetime = datetime(year=datetime.now().year, month=datetime.now().month, day=26, hour=20)
 
 class HuTaoBot(commands.Bot):
     """
@@ -76,6 +78,7 @@ class HuTaoBot(commands.Bot):
         bot_intents = discord.Intents.default()
         bot_intents.guild_reactions = True
         bot_intents.message_content = True
+        bot_intents.members = True
         super().__init__(command_prefix="!", intents=bot_intents)
 
         self.reminder_channel_id = reminder_channel  #
@@ -139,22 +142,27 @@ class HuTaoBot(commands.Bot):
         if message_id == self.target_message_id:
             # the id of the message the member reacted to is the same as the message registered
             member_id = payload.user_id
-            guild = self.get_guild(payload.guild_id)
+            member_guild = self.get_guild(payload.guild_id)
 
             try:
                 # retrieve the role based on the reacted emoji
                 role_id = self.emoji_to_role[payload.emoji]
             except KeyError:
                 # the reacted emoji isn't on the list
+                print("emoji isn't on the list")
                 return
-            role = guild.get_role(role_id)
-            member = guild.get_member(member_id)
+            role_to_remove = member_guild.get_role(role_id)
+            member_role_to_remove = member_guild.get_member(member_id)
 
-            if member is None:
+            if member_role_to_remove is None:
                 # member isn't in the server anymore
+                print("not in the server anymore")
+                return
+            if role_to_remove is None:
+                print("role not fetched")
                 return
 
-            await member.remove_roles(role)
+            await member_role_to_remove.remove_roles(role_to_remove)
 
     #### REMINDERS ####
 
@@ -257,25 +265,7 @@ class HuTaoBot(commands.Bot):
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
-    # needs to return time left between today and 15 of month at 20h
-    @staticmethod
-    def calculate_time_prime_reminders():
-        local_time = datetime.now()
-        start_date = datetime(year=local_time.year, month=local_time.month, day=26, hour=15, minute=25, second=0)
-
-        # new year case
-        if start_date.month == 12 and start_date.day > local_time.day:
-            start_date = datetime(year=local_time.year + 1, month=1, day=15, hour=20, minute=0, second=0)
-
-        calculation_time = start_date - local_time
-        day = abs(calculation_time.days)
-        seconds = abs(calculation_time.seconds)  # seconds already have the minutes and hours added
-        duration = (day * 86400) + seconds
-        print("prime_wait_time = ", duration)
-        return duration
-
     @commands.has_permissions(mention_everyone=True)
-    @tasks.loop(seconds=calculate_time_prime_reminders())
     async def prime_reminder(self):
         """
         Ping every people with the amazon prime role to remind them to connect to prime gaming to claim their rewards
@@ -292,6 +282,25 @@ class HuTaoBot(commands.Bot):
         await self.get_channel(channel_remind).send(f"{mention}", embed=prime_embed)
         return
 
+    @tasks.loop(hours=24)
+    async def check_prime_reminder(self):
+        now = discord.utils.utcnow()
+        global prime_loop_datetime
+
+        if prime_loop_datetime.year != now.year:
+            prime_loop_datetime = datetime(year=now.year, month=now.month, day=prime_loop_datetime.day, hour=prime_loop_datetime.hour)
+        if now.day != prime_loop_datetime.day:
+            return
+        await self.prime_reminder()
+
+    @check_prime_reminder.before_loop
+    async def before_check_prime(self):
+        now = datetime.now()
+        duration = self.duration_calculation(now, prime_loop_datetime)
+
+        await asyncio.sleep(duration)
+        await self.wait_until_ready()
+
 
     #### ON READY ####
     async def on_ready(self):
@@ -302,10 +311,13 @@ class HuTaoBot(commands.Bot):
         # await self.role_assigner_checker()
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
-        self.prime_reminder.start()
+
+        self.check_prime_reminder.start()
+
 
 async def setup(bot):
     await bot.add_cog(RoleAttribute.RoleAttribute(bot))
+
 
 # the following line is used to retrieve the variable needed to run the bot
 if not os.environ.get("PRODUCTION"):
