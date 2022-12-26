@@ -34,50 +34,78 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
         help_command = HuTaoHelpCommand.HuTaoHelpCommand()
         bot.help_command = help_command
 
-
-    def checking_answer(ctx):
+    def checking_answer(self, ctx):
         """ Check if the current channel is the same as the one specified in the config file for answering commands
         """
-        return ctx.message.channel.id == 897080141778407424
+        return ctx.message.channel.id == self.bot.answer_channel_id
 
-    def checking_role(ctx):
+    def checking_role(self, ctx):
         """ Check if the current channel is the same as the one specified in the config file to post the reaction
         role message
         """
-        return ctx.message.channel.id == 939543859988398201
+        return ctx.message.channel.id == self.bot.role_channel_id
+
+    async def check_last_message(self, ctx):
+        channel = self.bot.get_channel(self.bot.role_channel_id)
+
+        messages = [message async for message in channel.history(limit=2)]
+
+        message = messages[1]
+
+        if message.author.id == self.bot.user.id:
+            self.bot.target_message_id = message.id
+        else:
+            self.bot.target_message_id = None
 
     @commands.command(name="hutao")
-    @commands.check(checking_answer)
     async def ping_pong(self, ctx):
         """ When calling her name, the bot answer
         Mostly used for debug or to check if the bot is responding
          """
-        await ctx.send("I am here !")
+        if self.checking_answer(ctx):
+            await ctx.send("Henlo~ ! 👋")
 
     @commands.command(name="init")
-    @commands.check(checking_role)
     async def initialisation(self, ctx):
         """ Initialise the reaction role message.
         Can only be called one time and if the channel id is equal to CHANNEL_ROLE
         """
-        # check if the init have already been done, if not -> error
-        if self.bot.init_flag:
-            await self.bot.get_channel(self.bot.answer_channel_id).send(
-                "Initialisation have already been done, check ancient "
-                "messages !")
+        if not self.checking_role(ctx):
+            await self.initialisation_error(ctx)
             return
 
-        message = await self.bot.get_channel(self.bot.role_channel_id).send(
-            "React to this message to get the corresponding roles :\n😊 : Rappel genshin\n🥳 : Rappel Epic Games")
-        self.bot.target_message_id = message.id
-        # list all the emojis to add them on the reaction messages
-        for e in self.bot.emoji_to_role:
-            await message.add_reaction(e)
-        self.bot.init_flag = True
-        print("Initialization done")
+        # check if the init have already been done, if not -> error
+        if self.bot.init_flag:
+            await ctx.message.delete()
+            await self.bot.get_channel(self.bot.answer_channel_id).send(
+                "Initialisation have already been done, check ancient "
+                "messages ! " + ctx.message.author.mention, delete_after=5)
+            return
 
-    @initialisation.error
-    async def initialisation_error(self, ctx, error):
+        # check if the bot have already been run and initialized previously
+        await self.check_last_message(ctx)
+
+        if self.bot.target_message_id is not None:
+            self.bot.init_flag = True
+            await ctx.message.delete()
+            print("Last role reaction message have been fetched")
+            return
+
+        else:
+            message = await self.bot.get_channel(self.bot.role_channel_id).send(
+                "React to this message to get the corresponding roles :\n🗡️ Rappel genshin\n"
+                "🎮 Rappel Epic Games\n👑 Rappel Twitch Prime")
+            self.bot.target_message_id = message.id
+            # list all the emojis to add them on the reaction messages
+            for e in self.bot.emoji_to_role:
+                await message.add_reaction(e)
+
+            await ctx.message.delete()
+            self.bot.init_flag = True
+            print("Initialization done")
+
+    @staticmethod
+    async def initialisation_error(ctx):
         """ Called if the initialisation have been called in the wrong channel """
-        if isinstance(error, commands.CheckFailure):
-            await ctx.send("You can't call this command outside the initialisation channel")
+        await ctx.message.delete()
+        await ctx.send("You can't call this command outside the initialisation channel", delete_after=5)

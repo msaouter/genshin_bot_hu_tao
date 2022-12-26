@@ -3,8 +3,7 @@ Hu Tao Discord Bot
 ~~~~~~~~~~~~~~~~~~
 
 A Genshin Impact bot that can :
-* send notifications if genshin official social network are posting something -> TODO
-* send reminder for the hoyolab connexion, the epic game store free game & birthdays
+* send reminder for the hoyolab connexion, the epic game store free game & prime gaming
 * give infos about the upcomming banners -> TODO
 * assign roles on your discord
 
@@ -17,11 +16,14 @@ import discord
 from discord.ext import tasks
 from discord.ext import commands
 import os
+
 if not os.environ.get("PRODUCTION"):
     from dotenv import load_dotenv
 from datetime import datetime
 import RoleAttribute
 
+#### GLOBAL ####
+prime_loop_datetime = datetime(year=datetime.now().year, month=datetime.now().month, day=26, hour=20)
 
 class HuTaoBot(commands.Bot):
     """
@@ -72,23 +74,29 @@ class HuTaoBot(commands.Bot):
     """
 
     def __init__(self, reminder_channel, genshin_role, epicgames_role, answer_channel, guild_id, role_channel,
-                 birthday_channel):
-        super().__init__(command_prefix="!", intents=discord.Intents.all())
+                 birthday_channel, primegaming_role):
+        bot_intents = discord.Intents.default()
+        bot_intents.guild_reactions = True
+        bot_intents.message_content = True
+        bot_intents.members = True
+        super().__init__(command_prefix="!", intents=bot_intents)
 
-        self.reminder_channel_id = reminder_channel
-        self.genshin_role_id = genshin_role
-        self.epicgames_role_id = epicgames_role
-        self.answer_channel_id = answer_channel
-        self.birthday_channel_id = birthday_channel
+        self.reminder_channel_id = reminder_channel  #
+        self.genshin_role_id = genshin_role  #
+        self.epicgames_role_id = epicgames_role  #
+        self.primegaming_role_id = primegaming_role  #
+        self.answer_channel_id = answer_channel  #
+        self.birthday_channel_id = birthday_channel  #
 
-        self.guild_id = guild_id
-        self.role_channel_id = role_channel
+        self.guild_id = guild_id  #
+        self.role_channel_id = role_channel  #
         self.target_message_id = 0  # id of the message that can be reacted to add/remove role
         self.emoji_to_role = {  # dictionary of the emoji you can use to store it
             # ADD YOUR EMOJIS HERE
             # format : emoji to be detected by the bot (can be personalized one), id of the role it give
-            discord.PartialEmoji(name='😊'): self.genshin_role_id,
-            discord.PartialEmoji(name='🥳'): self.epicgames_role_id,
+            discord.PartialEmoji(name='🗡️'): self.genshin_role_id,
+            discord.PartialEmoji(name='🎮'): self.epicgames_role_id,
+            discord.PartialEmoji(name='👑'): self.primegaming_role_id,
         }
         self.init_flag = False
 
@@ -134,22 +142,27 @@ class HuTaoBot(commands.Bot):
         if message_id == self.target_message_id:
             # the id of the message the member reacted to is the same as the message registered
             member_id = payload.user_id
-            guild = self.get_guild(payload.guild_id)
+            member_guild = self.get_guild(payload.guild_id)
 
             try:
                 # retrieve the role based on the reacted emoji
                 role_id = self.emoji_to_role[payload.emoji]
             except KeyError:
                 # the reacted emoji isn't on the list
+                print("emoji isn't on the list")
                 return
-            role = guild.get_role(role_id)
-            member = guild.get_member(member_id)
+            role_to_remove = member_guild.get_role(role_id)
+            member_role_to_remove = member_guild.get_member(member_id)
 
-            if member is None:
+            if member_role_to_remove is None:
                 # member isn't in the server anymore
+                print("not in the server anymore")
+                return
+            if role_to_remove is None:
+                print("role not fetched")
                 return
 
-            await member.remove_roles(role)
+            await member_role_to_remove.remove_roles(role_to_remove)
 
     #### REMINDERS ####
 
@@ -188,11 +201,15 @@ class HuTaoBot(commands.Bot):
         Start the reminder any day at 8pm
         """
         local_time = datetime.now()
+        # minus one hour for the time difference with the server
         start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day, hour=20)
+
+        # new year case
+        if start_date.month == 12 and start_date.day > local_time.day:
+            start_date = datetime(year=local_time.year + 1, month=1, day=local_time.day, hour=20)
 
         if local_time != start_date:
             duration = self.duration_calculation(local_time, start_date)
-            print("Genshin impact : ", duration)
             await asyncio.sleep(duration)
         else:
             await self.wait_until_ready()
@@ -239,8 +256,48 @@ class HuTaoBot(commands.Bot):
             day_to_add = 4
 
         start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=17)
+
+        # new year case
+        if start_date.month == 12 and start_date.day > local_time.day:
+            start_date = datetime(year=local_time.year + 1, month=1, day=local_time.day + day_to_add, hour=17)
+
         duration = self.duration_calculation(local_time, start_date)
-        print("Epic store : ", duration)
+        await asyncio.sleep(duration)
+        await self.wait_until_ready()
+
+    @commands.has_permissions(mention_everyone=True)
+    async def prime_reminder(self):
+        """
+        Ping every people with the amazon prime role to remind them to connect to prime gaming to claim their rewards
+        """
+        prime_embed = discord.Embed(
+            title='Prime gaming reminder',
+            description="Don't forget to check prime gaming to get all your free rewards !",
+            url="https://gaming.amazon.com/",
+            color=discord.Color.purple()
+        )
+        prime_embed.set_image(
+            url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsiCDT4BRLL3R2Jr46lpSXXHFXLyWyW_hiRA&usqp=CAU")
+        mention = self.get_guild(self.guild_id).get_role(self.primegaming_role_id).mention
+        await self.get_channel(channel_remind).send(f"{mention}", embed=prime_embed)
+        return
+
+    @tasks.loop(hours=24)
+    async def check_prime_reminder(self):
+        now = discord.utils.utcnow()
+        global prime_loop_datetime
+
+        if prime_loop_datetime.year != now.year:
+            prime_loop_datetime = datetime(year=now.year, month=now.month, day=prime_loop_datetime.day, hour=prime_loop_datetime.hour)
+        if now.day != prime_loop_datetime.day:
+            return
+        await self.prime_reminder()
+
+    @check_prime_reminder.before_loop
+    async def before_check_prime(self):
+        now = datetime.now()
+        duration = self.duration_calculation(now, prime_loop_datetime)
+
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
@@ -251,8 +308,15 @@ class HuTaoBot(commands.Bot):
         start the reminders
         """
         print(f"{self.user.display_name} is ready !")
+        # await self.role_assigner_checker()
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
+
+        self.check_prime_reminder.start()
+
+
+async def setup(bot):
+    await bot.add_cog(RoleAttribute.RoleAttribute(bot))
 
 
 # the following line is used to retrieve the variable needed to run the bot
@@ -267,10 +331,11 @@ channel_birthdays = int(os.getenv("CHANNEL_BIRTHDAYS"))
 guild = int(os.getenv("GUILD"))
 genshin_role = int(os.getenv("GENSHIN_ROLE"))
 epicgames_role = int(os.getenv("EPIC_GAMES_ROLE"))
+primegaming_role = int(os.getenv("PRIME_GAMING"))
 
 HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
                  answer_channel=channel_answer, guild_id=guild, role_channel=channel_role,
-                 birthday_channel=channel_birthdays)
-HuTao.add_cog(RoleAttribute.RoleAttribute(HuTao))
+                 birthday_channel=channel_birthdays, primegaming_role=primegaming_role)
+asyncio.run(setup(HuTao))
 
 HuTao.run(os.getenv("TOKEN"))
