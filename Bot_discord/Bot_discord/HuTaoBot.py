@@ -83,7 +83,7 @@ class HuTaoBot(commands.Bot):
                  birthday_channel, primegaming_role):
         bot_intents = discord.Intents.default()
         bot_intents.guild_reactions = True
-        # bot_intents.message_content = True
+        bot_intents.message_content = True
         bot_intents.members = True
         super().__init__(command_prefix="!", intents=bot_intents)
 
@@ -275,8 +275,7 @@ class HuTaoBot(commands.Bot):
     @tasks.loop(hours=168)
     async def prime_reminder(self):
         """
-        Ping every people with the epic games role to remind them to connect to epic games store to get their
-        free game(s)
+        Ping every people with the prime gaming role to remind them to connect to prime gaming to get their free rewards
         """
         prime_embed = discord.Embed(
             #         title='Prime gaming reminder',
@@ -333,8 +332,8 @@ class HuTaoBot(commands.Bot):
         self.prime_reminder.start()
 
 
-def setup(bot):
-    bot.add_cog(RoleAttribute.RoleAttribute(bot))
+async def setup(bot):
+    await bot.add_cog(RoleAttribute.RoleAttribute(bot))
 
 
 # the following line is used to retrieve the variables needed to run the bot
@@ -357,6 +356,7 @@ primegaming_role = int(os.getenv("PRIME_GAMING"))
 HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
                  answer_channel=channel_answer, guild_id=guild, role_channel=channel_role,
                  birthday_channel=channel_birthdays, primegaming_role=primegaming_role)
-setup(HuTao)
+
+asyncio.run(setup(HuTao))
 
 HuTao.run(os.getenv("TOKEN"))

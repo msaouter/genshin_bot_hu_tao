@@ -49,7 +49,7 @@ class HuTaoHelpCommand(commands.HelpCommand):
         return '%s %s' % (command.qualified_name, command.signature)
 
     async def send(self, **kwargs):
-        """ A short cut to sending to get_destination """
+        """ A shortcut to sending to get_destination """
         await self.get_destination().send(**kwargs)
 
     async def send_bot_help(self, mapping):
