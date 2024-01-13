@@ -128,3 +128,4 @@ config
 .idea/
 
 Bot_discord/.vs/
+Bot_discord/Bot_discord/config_test

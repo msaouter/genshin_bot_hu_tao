@@ -104,6 +104,12 @@ class RoleAttribute(commands.Cog, name="Hu Tao commands"):
             self.bot.init_flag = True
             print("Initialization done")
 
+    @commands.command(name="repeat")
+    async def write_message(self, ctx, *, message):
+        if self.checking_answer(ctx):
+            await ctx.message.delete()
+            await ctx.send(f"{message}")
+
     @staticmethod
     async def initialisation_error(ctx):
         """ Called if the initialisation have been called in the wrong channel """

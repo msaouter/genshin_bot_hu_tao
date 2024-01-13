@@ -17,13 +17,14 @@ from discord.ext import tasks
 from discord.ext import commands
 import os
 
-if not os.environ.get("PRODUCTION"):
-    from dotenv import load_dotenv
+from dotenv import load_dotenv
 from datetime import datetime
 import RoleAttribute
 
 #### GLOBAL ####
-prime_loop_datetime = datetime(year=datetime.now().year, month=datetime.now().month, day=26, hour=18)
+production = False #variable to transition between test & server config file
+#### GLOBAL ####
+
 
 
 class HuTaoBot(commands.Bot):
@@ -69,6 +70,10 @@ class HuTaoBot(commands.Bot):
         game(s)
     before_epic_reminder()
         Start the reminder on a thursday at 5pm
+    prime_reminder()
+        Ping every people with the prime gaming role to remind them to connect to prime to get their free games/loots
+    before_prime_reminder()
+        Start the reminder on a monday at 7pm
     on_ready()
         Function called when the bot is ready to answer command, print in console when it's ready to answer and
         start the reminders
@@ -78,7 +83,7 @@ class HuTaoBot(commands.Bot):
                  birthday_channel, primegaming_role):
         bot_intents = discord.Intents.default()
         bot_intents.guild_reactions = True
-        bot_intents.message_content = True
+        # bot_intents.message_content = True
         bot_intents.members = True
         super().__init__(command_prefix="!", intents=bot_intents)
 
@@ -267,39 +272,53 @@ class HuTaoBot(commands.Bot):
         await self.wait_until_ready()
 
     @commands.has_permissions(mention_everyone=True)
+    @tasks.loop(hours=168)
     async def prime_reminder(self):
         """
-        Ping every people with the amazon prime role to remind them to connect to prime gaming to claim their rewards
+        Ping every people with the epic games role to remind them to connect to epic games store to get their
+        free game(s)
         """
         prime_embed = discord.Embed(
-            title='Prime gaming reminder',
-            description="Don't forget to check prime gaming to get all your free rewards !",
-            url="https://gaming.amazon.com/",
-            color=discord.Color.purple()
+            #         title='Prime gaming reminder',
+            #         description="Don't forget to check prime gaming to get all your free rewards !",
+            #         url="https://gaming.amazon.com/",
+            #         color=discord.Color.purple()
         )
         prime_embed.set_image(
             url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsiCDT4BRLL3R2Jr46lpSXXHFXLyWyW_hiRA&usqp=CAU")
         mention = self.get_guild(self.guild_id).get_role(self.primegaming_role_id).mention
         await self.get_channel(channel_remind).send(f"{mention}", embed=prime_embed)
-        return
 
-    @tasks.loop(hours=24)
-    async def check_prime_reminder(self):
-        now = discord.utils.utcnow()
-        global prime_loop_datetime
+    @prime_reminder.before_loop
+    async def before_prime_reminder(self):
+        """
+        Start the reminder on a monday at 5pm
+        """
+        local_time = datetime.now()
+        weekday = local_time.weekday()
+        day_to_add = 0
+        if weekday == 0:  # Monday TARGET DAY
+            day_to_add = 0
+        elif weekday == 1:  # Tuesday
+            day_to_add = 6
+        elif weekday == 2:  # Wednesday
+            day_to_add = 5
+        elif weekday == 3:  # Thursday
+            day_to_add = 4
+        elif weekday == 4:  # Friday
+            day_to_add = 3
+        elif weekday == 5:  # Saturday
+            day_to_add = 2
+        elif weekday == 6:  # Sunday
+            day_to_add = 1
 
-        if prime_loop_datetime.year != now.year:
-            prime_loop_datetime = datetime(year=now.year, month=now.month, day=prime_loop_datetime.day,
-                                           hour=prime_loop_datetime.hour)
-        if now.day != prime_loop_datetime.day:
-            return
-        await self.prime_reminder()
+        start_date = datetime(year=local_time.year, month=local_time.month, day=local_time.day + day_to_add, hour=19)
 
-    @check_prime_reminder.before_loop
-    async def before_check_prime(self):
-        now = datetime.now()
-        duration = self.duration_calculation(now, prime_loop_datetime)
+        # new year case
+        if start_date.month == 12 and start_date.day > local_time.day:
+            start_date = datetime(year=local_time.year + 1, month=1, day=local_time.day + day_to_add, hour=19)
 
+        duration = self.duration_calculation(local_time, start_date)
         await asyncio.sleep(duration)
         await self.wait_until_ready()
 
@@ -311,22 +330,25 @@ class HuTaoBot(commands.Bot):
         print(f"{self.user.display_name} is ready !")
         self.genshin_reminder.start()
         self.epic_store_reminder.start()
-        self.check_prime_reminder.start()
+        self.prime_reminder.start()
 
 
-async def setup(bot):
-    await bot.add_cog(RoleAttribute.RoleAttribute(bot))
+def setup(bot):
+    bot.add_cog(RoleAttribute.RoleAttribute(bot))
 
 
-# the following line is used to retrieve the variable needed to run the bot
-if not os.environ.get("PRODUCTION"):
+# the following line is used to retrieve the variables needed to run the bot
+if production:
     load_dotenv(dotenv_path="config")
+else:
+    load_dotenv(dotenv_path="config_test")
+
 
 # assign all config variables to a python variable
 channel_role = int(os.getenv("CHANNEL_ROLE"))
 channel_remind = int(os.getenv("CHANNEL_REMIND"))
 channel_answer = int(os.getenv("CHANNEL_ANSWER"))
-channel_birthdays = int(os.getenv("CHANNEL_BIRTHDAYS"))
+channel_birthdays = int(os.getenv("CHANNEL_BIRTHDAYS"))  # not used atm, next major update
 guild = int(os.getenv("GUILD"))
 genshin_role = int(os.getenv("GENSHIN_ROLE"))
 epicgames_role = int(os.getenv("EPIC_GAMES_ROLE"))
@@ -335,6 +357,6 @@ primegaming_role = int(os.getenv("PRIME_GAMING"))
 HuTao = HuTaoBot(reminder_channel=channel_remind, genshin_role=genshin_role, epicgames_role=epicgames_role,
                  answer_channel=channel_answer, guild_id=guild, role_channel=channel_role,
                  birthday_channel=channel_birthdays, primegaming_role=primegaming_role)
-asyncio.run(setup(HuTao))
+setup(HuTao)
 
 HuTao.run(os.getenv("TOKEN"))

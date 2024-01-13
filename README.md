@@ -49,7 +49,7 @@ To install HuTao on your server, you'll need a server or a computer that will be
 # Disclaimer
 <p>HuTao is small bot created by a video game programer and genshin impact enthusiast to help her discord server. I don't promise regular updates as I made this project for fun, I can't promise to add what you want because I add in priority what my guild needs and what's in my programming capacities. This may stop receving updates at any moments by a lack of time or not wanting to add anything else.
 
-~~By this time, the major problem of this project is <a href="https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1">the discord API library used as discord.py isn't supported anymore</a> so I'll have to migrate my full project on another discord API library who uses Python3 as soon as possible in order to still get an updated library. Migrating this project to javascript isn't an option for me.</p>~~ Discord.py have decided to pursue the developpment of the library so this isn't my main issue anymore, moreover, this project have already migrated to Discord.py 2.0.
+~~By this time, the major problem of this project is <a href="https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1">the discord API library used as discord.py isn't supported anymore</a> so I'll have to migrate my full project on another discord API library who uses Python3 as soon as possible in order to still get an updated library. Migrating this project to javascript isn't an option for me.</p>~~ Discord.py have decided to pursue the developpment of the library so this isn't my main issue anymore. Migration to 2.0 planned for V1.2.
 
 
 # License
