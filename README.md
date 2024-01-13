@@ -40,16 +40,69 @@ HuTao is a discord bot that have multiple functionnalities :
 
 
 # Installation
-<p>HuTao is small bot created by a video game programer and genshin impact enthusiast to help her discord server. At the moment the 1.1 version is released, HuTao can't be added to your server because of the current state of the code that include hard coding of some functionalities, the lack of a tutorial to include it, and missing functionalities. 
+<p>HuTao is small bot created by a video game programer and genshin impact enthusiast to help her discord server. At the moment the 1.2 version is released, HuTao can be added to your server but not via the Add Application button and it may be lacking some of it's core feature like the birthdays management or the full management of the roles.
 
-To install HuTao on your server, you'll need a server or a computer that will be powered 24/7 to act as a server. You'll also need to activate the <a href="https://techswift.org/2020/09/17/how-to-enable-developer-mode-in-discord/">developper mode of discord</a>.
+To install HuTao on your server, you'll need a server or a computer that will be powered 24/7 to act as a server or you may chose to not have it always running. You'll also need to activate the <a href="https://techswift.org/2020/09/17/how-to-enable-developer-mode-in-discord/">developper mode of discord</a> and to download a python editor like <a href="https://www.jetbrains.com/fr-fr/pycharm/download/?section=windows">pyCharm</a> which is free and my prefered IDE.
 
-**Installation process will be fully written once the bot will be able to installed elsewhere.** If you're interested, you know at least what you'll need to install it on your discord server. </p>
+First of all, do not use the button "Add this application", the bot needs a config file with your server ID at the moment. </p>
+
+## Server creation
+To host this bot, you'll need your own server. Here's 3 possible options :
+- Use your personnal computer. This means that to leave it operationnal 24/7, you'll need to let your computer run. The bot can be shutdown / restarted without any problem at the 1.2 version so even if you don't want it to be able to operate at any time, this is totally ok and the only thing you'll need to remind yourself is to launch the bot programm when you start your computer.
+- Buy a Raspberry Pi and host it on it. This is the solution I'm currently using. I'm using the Zero 2 W board. This is probably the best compromise of all 3 options as the small board doesn't take a lot of place, can run 24/7 and doesn't take too much electricity.
+- Use an online service of python discord bot hosting. You can find free or paid services, I don't have any recommandation as the free ones i used to use are now closed.
+
+## Config file creation
+Once you've copied this repository, you'll need to create a config file called config and to change the production variable to True. Let's do the first thing. 
+Go to genshin_bot_hu_tao\Bot_discord\Bot_discord folder, inside this folder you'll the .py files. Do a right click and go to New -> Text file. Name the new file "config" without any extension. Click ok on the warning windows that may appear telling you that removing the extension may broke the file. Open it on the windows bloc note and paste this format :
+```
+TOKEN=
+CHANNEL_ROLE=
+CHANNEL_REMIND=
+CHANNEL_ANSWER=
+CHANNEL_BIRTHDAYS=
+GUILD=
+GENSHIN_ROLE=
+EPIC_GAMES_ROLE=
+PRIME_GAMING=
+```
+
+Here's how to complete it :
+- The token is your bot token, it is striclty personnal and if found anywhere online, discord will automatically change it. Don't mess with it. To retrieve your bot token <a href="https://www.writebots.com/discord-bot-token/">here's a perfect tutorial by writebots.</a> Just a reminder : if you forget your token, you'll need to reset it.
+- The channel_role/remind/answer/birthdays is the channel id where you want the bot to post messages for any of these actions. For this, you'll need <a href="https://beebom.com/how-enable-disable-developer-mode-discord/">the developer mode enabled</a> on your discord. Once it's activated, you can right click on the channel and click on Copy channel ID and paste it on the corresponding lines.
+- The guild is the server id. To get it, you can either right click on the server name if you're on it or on the server icon on the left bar and click Copy server ID.
+- The genshin/Epic/Prime_role is the roles ids. To get them, right click on the server name or icon -> server parameters -> roles. A right click on the role will allow you to see the Copy role ID option. Paste it onto the corresponding lines
+
+When you paste them onto your file, do not add any space between the "=" symbol and your numbers. Save it and you're done. With the config file complete, you're almost ready and the most difficult part is done.
+
+## Production value to True
+As I said in the precedent section, there's one variable to change. This variable is here to allow you to test the bot before launching it on your server or for me to test the next features i'm programming without disturbing my main bot. To use your bot on your server with your config file, open the file HuTaoBot.py
+On top of the file, you'll find a section called GLOBAL. Inside this section, you'll find a variable called production set to False. Change False to True (the caps is important otherwise you won't be able to launch the bot). Save and you're ready to finally launch it.
+<img width="488" alt="the global section with the production values right after the import lines" src="https://github.com/msaouter/genshin_bot_hu_tao/assets/45098192/d4253e33-3843-4a09-a5ef-c74deb8984bc">
+
+
+## Start the bot
+I'll write here only how to start it locally on your computer or on a raspberry. If you chose to go with the server option, please see with your server how to start a discord bot. If you're on your personnal computer with pyCharm, open the HuTaoBot.py and click on the run option on the top far right of your screen. A console will open on the bottom of your pyCharm interface. Once you see the message "bot_name is ready !", this is functionnal. 
+
+If you're not on pyCharm, any coding environnement will have a run option, find it, click on it and it'll normally open a console command and show you the same message when it can receive commands.
+On raspberry OS, open the terminal by doing a right click on an empty space of the file manager and terminal. Once you have the process open, enter this following line :
+```
+python HuTaoBot.py
+```
+On the terminal you'll see the message "bot_name is ready !" which means the bot can answer you.
+
+To test the bot, on your answer channel you can try the command "!hutao", she'll greet you.
+
+## Initialize the role attribution function
+HuTao is able to manage the genshin/epic/prime role when initialized. You can always attribute them yourself by hand but why waste your time when you can automate it ?
+To initialize her role management function, write on your role assignement channel the command "!init". Once this command is send, HuTao will post a message to show you the emotes to react to get the corresponding reminder roles.
+
+## End note
+This process is an experimentation, i'm not fully certain the installation process is working but it's similar to any discord bot which needs you to own the application on your account. I plan in the future to have a full compatibility with the "Add application" button.
+
 
 # Disclaimer
 <p>HuTao is small bot created by a video game programer and genshin impact enthusiast to help her discord server. I don't promise regular updates as I made this project for fun, I can't promise to add what you want because I add in priority what my guild needs and what's in my programming capacities. This may stop receving updates at any moments by a lack of time or not wanting to add anything else.
-
-~~By this time, the major problem of this project is <a href="https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1">the discord API library used as discord.py isn't supported anymore</a> so I'll have to migrate my full project on another discord API library who uses Python3 as soon as possible in order to still get an updated library. Migrating this project to javascript isn't an option for me.</p>~~ Discord.py have decided to pursue the developpment of the library so this isn't my main issue anymore. Migration to 2.0 planned for V1.2.
 
 
 # License
